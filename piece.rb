@@ -1,5 +1,5 @@
 
-
+require 'colorize'
 class Piece
   attr_reader :pos, :color
   
@@ -10,16 +10,54 @@ class Piece
     @color = color
   end
   
-  def name #doesn't handle kinged piece rn
-    color == :red ? "R" : "B"
+  def name
+    if @kinged
+      @color == :red ? "K".red : "K".black
+    else
+      @color == :red ? "M".red : "M".black
+    end
   end
   
-  # def perform_moves!(sequence)
- #
- #  end
+  def perform_moves(sequence)
+    begin
+      raise InvalidMoveError unless valid_move_seq?(sequence)
+    rescue InvalidMoveError => e
+      puts "Error #{e.message}"
+    else 
+      perform_moves!(sequence)
+    end
+  end
   
-  #overall move handeler, both slide and jump make use of this
-  #only executes moves, does nothing else
+  def valid_move_seq?(sequence)
+
+    begin
+      copy_board = @board.dup
+      # puts copy_board[@pos].nil?
+      copy_board[@pos.dup].perform_moves!(sequence)
+    rescue => e
+      # puts e.exception
+      # puts e.backtrace
+      return false
+    end
+    return true
+  end
+  
+  def perform_moves!(sequence)
+    sequence.each do |el|
+      start, target = el
+      move_was_valid = false
+      if sequence.length == 1 && is_slide?(target)
+         move_was_valid = perform_slide(target)
+      else
+         move_was_valid = perform_jump(target)
+      end
+      raise InvalidMoveError unless move_was_valid
+    end
+  end
+  
+  
+  
+  #Executive move handeler, only executes moves, does nothing else
   def move!(target)
     @board[@pos] = nil
     @pos = target   
@@ -27,10 +65,21 @@ class Piece
     true
   end
   
-  #on board
-  #can't move into other pieces
+  def is_slide?(end_pos)
+    ((@pos[0] - end_pos[0]).abs == 1) && ((@pos[1] - end_pos[1]).abs == 1)
+  end
+  
   def perform_slide(target)
     valid_slides.include?(target) ? move!(target) : false
+  end
+  
+  def perform_jump (target)
+    if valid_jumps.include?(target) 
+       @board[get_flyover(target)].delete!
+       move!(target) 
+    else
+      false
+    end
   end
 
   def valid_slides
@@ -42,40 +91,24 @@ class Piece
     end
     slides
   end
-  
-  #include a delete method that removes piece from the board, 
-  #prolly should be on board
-  def perform_jump (target)
-    if valid_jumps.include?(target) 
-       @board[get_flyover(target)].delete!
-       move!(target) 
-    else
-      false
-    end
-  end
-  #still needs delete handleing
-  
+    
   #only handles single jumps
   def valid_jumps 
     jumps = []
     move_dirs.each do |jump|
       #landing location
-      x, y = (2 * jump[0] +  pos[0]), (2 * jump[1] +   pos[1])
+      x, y = (2 * jump[0] + pos[0]), (2 * jump[1] + pos[1])
       #flyover square
-      u, v = (jump[0] +  pos[0]), (jump[1] +   pos[1])
+      u, v = (jump[0] + pos[0]), (jump[1] + pos[1])
       next unless (0..7).include?(x) && (0..7).include?(y)      
       jumps << [x, y] if (!@board[[u, v]].nil?) && @board[[x, y]].nil?
     end
     jumps
   end
   
-  #gets the position of the piece thatll get captured via a jump
   def get_flyover(target)
-    deltX, deltY = (target[0] - @pos[0])/2, (target[1] - @pos[1])/2
-    [pos[0] + deltX, pos[1] + deltY]
+    [@pos[0] + (target[0] - @pos[0])/2, @pos[1] + (target[1] - @pos[1])/2]
   end
-  #could refactor, but that might obscure how this works
-  
   
   def move_dirs
     if @kinged
@@ -94,5 +127,9 @@ class Piece
   def maybe_promote
     pos[0] == 7 ? @kinged = true : return
   end
+  
+end
+
+class InvalidMoveError < StandardError
   
 end
