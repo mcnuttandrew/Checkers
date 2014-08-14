@@ -1,7 +1,7 @@
 
-require 'colorize'
+#require 'colorize'
 class Piece
-  attr_reader :pos, :color
+  attr_reader :pos, :color, :kinged
   
   def initialize(board, pos, color, kinged = false)
     @board = board
@@ -23,20 +23,19 @@ class Piece
       raise InvalidMoveError unless valid_move_seq?(sequence)
     rescue InvalidMoveError => e
       puts "Error #{e.message}"
+      return false
     else 
       perform_moves!(sequence)
+      return true
     end
   end
   
   def valid_move_seq?(sequence)
-
     begin
       copy_board = @board.dup
       # puts copy_board[@pos].nil?
       copy_board[@pos.dup].perform_moves!(sequence)
     rescue => e
-      # puts e.exception
-      # puts e.backtrace
       return false
     end
     return true
@@ -65,11 +64,12 @@ class Piece
     true
   end
   
-  def is_slide?(end_pos)
-    ((@pos[0] - end_pos[0]).abs == 1) && ((@pos[1] - end_pos[1]).abs == 1)
+  def is_slide?(target)
+    ((@pos[0] - target[0]).abs == 1) && ((@pos[1] - target[1]).abs == 1)
   end
   
   def perform_slide(target)
+    
     valid_slides.include?(target) ? move!(target) : false
   end
   
@@ -121,11 +121,16 @@ class Piece
   def delete!
     @board[@pos] = nil
     @pos = nil
-    #add to captured total?
   end
   
   def maybe_promote
-    pos[0] == 7 ? @kinged = true : return
+    if @color == :red && pos[1] == 7 && !@kinged
+       puts "kinged!"
+       @kinged = true
+     elsif @color == :black && pos[1] == 0 && !@kinged
+       puts "kinged!"
+       @kinged = true
+    end
   end
   
 end
