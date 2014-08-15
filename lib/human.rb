@@ -1,4 +1,3 @@
-
 class HumanPlayer
   attr_reader :color
   

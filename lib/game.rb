@@ -1,12 +1,13 @@
 require 'colorize'
 require_relative 'board.rb'
 require_relative 'human.rb'
+require_relative 'computer.rb'
 
 class Game
   def initialize
     @board = Board.new
     @p1 = HumanPlayer.new(:red)
-    @p2 = HumanPlayer.new(:black)
+    @p2 = ComputerPlayer.new(:black)
     @current = @p1
   end
   
