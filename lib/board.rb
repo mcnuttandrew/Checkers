@@ -16,7 +16,7 @@ class Board
     color_list.each do |clr|
       3.times do |ydir|
         (0..3).each do |xdir|
-          x = 2*xdir + (shift ? 1 : 0)
+          x = 2 * xdir + (shift ? 1 : 0)
           y = ydir + (clr == :red ? 0 : 5 )
           place_piece([x, y], clr)
         end
@@ -31,12 +31,19 @@ class Board
   
   def make_moves(sequence, color)
     piece = self[sequence[0][0]] 
+    raise "There's no piece there" if piece.nil?
     raise "Invalid Piece selection" if piece.color != color
+    found_jumps = find_jumps(color)
+    if found_jumps.length != 0 && !found_jumps.include?(sequence[0])
+      raise "Must jump a piece if possible"
+    end
     piece.perform_moves(sequence)
   rescue Exception => e
     puts e.message
     return false
   end
+  
+ 
   
   def dup
     dupped_board = Board.new(false)
@@ -56,26 +63,42 @@ class Board
   end
   
   def get_color(color)
-    @grid.flatten.compact.select{|piece| piece.color == color}
+    @grid.flatten.compact.select{|piece| !piece.nil? && piece.color == color}
+  end
+  
+  def find_jumps(color)
+    valid_jumps = []
+    pieces_with_jumps = get_color(color).select{|el| !el.valid_jumps.empty?}
+    pieces_with_jumps.each do |el|
+      el.valid_jumps.each do |move|
+        valid_jumps << [el.pos, move]
+      end
+    end
+    valid_jumps
+  end
+  
+  def find_slides(color)
+    valid_slides = []
+    pieces_with_slides = get_color(color).select{|el| !el.valid_slides.empty?}
+    pieces_with_slides.each do |el|
+      el.valid_slides.each do |move|
+        valid_slides << [el.pos, move]
+      end
+    end
+    valid_slides
   end
   
   def won?
      get_color(:black).length == 0 || get_color(:red).length == 0
   end
+  
+  def stalemate?
+    red_moves = find_jumps(:red) + find_slides(:red)
+    black_moves = find_jumps(:black) + find_slides(:black)
+    if red_moves.length == 0 || black_moves.length ==0
+      true
+    else
+      false
+    end
+  end
 end
-#
-#
-#
-#  g = Board.new
-# # g.render
-# # g.make_move([0,2], [1,3])
-# # g.render
-# # g.make_move([1,5], [2,4])
-# # g.render
-# # g.make_move([2,4], [0,2])
-# # g.render
-#
-# g.render
-# g[[0,2]].perform_moves([[[0, 2], [1, 3]]])
-#
-# g.render

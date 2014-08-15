@@ -19,7 +19,7 @@ class HumanPlayer
   
   def play_turn(board)
     render(board)
-    puts "It's #{@color} player's turn. "
+    puts "It is the #{@color} player's turn. "
     puts "Enter a move of the form a3,b4 b4,a5 "
     get_player_input 
   end

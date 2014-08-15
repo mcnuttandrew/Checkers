@@ -100,7 +100,8 @@ class Piece
       x, y = (2 * jump[0] + pos[0]), (2 * jump[1] + pos[1])
       #flyover square
       u, v = (jump[0] + pos[0]), (jump[1] + pos[1])
-      next unless (0..7).include?(x) && (0..7).include?(y)      
+      next unless (0..7).include?(x) && (0..7).include?(y)   
+      next if @board[[u, v]].nil? || (@board[[u, v]].color == @color)  
       jumps << [x, y] if (!@board[[u, v]].nil?) && @board[[x, y]].nil?
     end
     jumps

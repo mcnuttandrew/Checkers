@@ -16,11 +16,15 @@ class Game
       break if move_seq == 'quit'
       good_move = @board.make_moves(move_seq, @current.color)
       @board.get_color(@current.color).each {|piece| piece.maybe_promote }
-      @current = (@current == @p1 ? @p2 : @p1) if good_move & !won?
+      @current = (@current == @p1 ? @p2 : @p1) if good_move & !@board.won?
     end
-    puts "The #{@current} player has won!"
+    if @board.won?
+      puts "The #{@current.color} player has won!"
+    elsif @board.stalemate?
+      puts "The game ends in a draw"
+    else
+      puts "looks like you quit"
+    end
   end
   
 end
-
-Game.new.run
